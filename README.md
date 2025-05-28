@@ -29,7 +29,7 @@ This repository contains the PyTorch implementation of the paper:
 - **[2025-03-xx]** Code and pre-trained weights released!
 
 ## Pretrained Models
-We provide pretrained PCDreamer models on PCN and ShapeNet-55 [here](), download and put it into the ``./checkpoints`` 
+We provide pretrained PCDreamer models on PCN [here](https://drive.google.com/file/d/12VK2Ddnw82Oqo5TCR9igPQM-fGHu8WYU/view?usp=sharing), download and put it into the ``./checkpoints`` 
 folder. 
 
 
