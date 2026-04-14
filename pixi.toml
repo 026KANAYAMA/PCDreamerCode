@@ -1,0 +1,86 @@
+[workspace]
+name = "pcdreamercode"
+version = "0.1.0"
+description = "Pixi environment for PCDreamerCode"
+channels = ["nvidia", "conda-forge", "pytorch"]
+platforms = ["linux-64"]
+
+[activation.env]
+# conda 環境の libstdc++ を優先し、GLIBCXX バージョン不一致を防ぐ
+# torch/lib も追加: libc10.so 等の PyTorch ライブラリを解決するため
+LD_LIBRARY_PATH = "$CONDA_PREFIX/lib/python3.9/site-packages/torch/lib:$CONDA_PREFIX/lib:$LD_LIBRARY_PATH"
+
+[tasks]
+# C++拡張ライブラリを一括ビルド (pixi install 後に実行)
+build-extensions = """
+  cd pointnet2_ops_lib && python setup.py install &&
+  cd ../metrics/CD/chamfer3D && python setup.py install &&
+  cd ../../EMD && python setup.py install &&
+  cd ../../extensions/chamfer_dist && python setup.py install
+"""
+
+# 動作確認用タスク
+check-env = """
+  python -c \"import torch; print('PyTorch:', torch.__version__); print('CUDA available:', torch.cuda.is_available()); print('CUDA version:', torch.version.cuda)\" &&
+  python -c \"import numpy; print('NumPy:', numpy.__version__)\"
+"""
+
+# ─────────────────────────────────────────────────
+# conda で管理: Pythonランタイム + CUDAツールチェーン
+# ─────────────────────────────────────────────────
+[dependencies]
+python = "3.9.*"
+pip = "*"
+
+# CUDA 11.8 ツールチェーン (nvidia チャンネル統一)
+# conda-forge の cudatoolkit は使わない:
+#   → cuda-version (conda-forge/nvidia 混在) の競合を回避するため
+# cuda-version を nvidia から明示固定し、依存チェーン全体を nvidia に統一
+cuda-version = "11.8.*"
+cuda-nvcc = "11.8.*"
+cuda-cudart = "11.8.*"
+cuda-cudart-dev = "11.8.*"
+# CUDA ライブラリ開発ヘッダ (cusparse.h, cublas.h 等、拡張ビルドに必要)
+cuda-libraries-dev = "11.8.*"
+
+# C/C++ コンパイラ (CUDA 11.8 の nvcc は GCC 11 までしか対応しないため固定)
+gcc = "11.*"
+gxx = "11.*"
+# ビルドツール
+ninja = "*"
+
+# ─────────────────────────────────────────────────
+# pip で管理: 全Pythonパッケージ
+# numpyなどのバージョン競合を conda に解決させないため
+# ─────────────────────────────────────────────────
+[pypi-options]
+extra-index-urls = ["https://download.pytorch.org/whl/cu118"]
+# PyTorchインデックスにないパッケージ(tqdm等)をPyPIから取得するために必要
+index-strategy = "unsafe-best-match"
+
+[pypi-dependencies]
+# PyTorch GPU版 (CUDA 11.8)
+torch = "==2.0.1+cu118"
+torchvision = "==0.15.2+cu118"
+
+# 数値計算・画像処理
+numpy = "==1.24.4"
+pillow = "==10.0.0"
+opencv-python = "==4.8.0.76"
+open3d = "==0.17.0"
+h5py = "==3.9.0"
+
+# 機械学習ユーティリティ
+timm = "==0.9.7"
+einops = "==0.7.0"
+lpips = "==0.1.4"
+
+# 可視化・ログ
+matplotlib = "==3.7.2"
+tensorboardx = "==2.6.2.2"
+tqdm = "==4.66.1"
+
+# その他ユーティリティ
+easydict = "==1.10"
+pyyaml = "==6.0.1"
+transforms3d = "==0.4.1"
